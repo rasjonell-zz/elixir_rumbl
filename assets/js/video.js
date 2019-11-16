@@ -19,7 +19,11 @@ export default {
     const postButton = document.getElementById("msg-submit");
     const msgContainer = document.getElementById("msg-container");
 
-    const vidChannel = socket.channel(`videos:${videoId}`);
+    let lastSeenId = 0;
+
+    const vidChannel = socket.channel(`videos:${videoId}`, () => ({
+      last_seen_id: lastSeenId
+    }));
 
     postButton.addEventListener("click", e => {
       const payload = { body: msgInput.value, at: Player.getCurrentTime() };
@@ -29,15 +33,31 @@ export default {
       msgInput.value = "";
     });
 
-    vidChannel.on("new_annotation", resp =>
-      this.renderAnnotation(msgContainer, resp)
-    );
+    vidChannel.on("new_annotation", resp => {
+      lastSeenId = resp.id;
+      this.renderAnnotation(msgContainer, resp);
+    });
+
+    msgContainer.addEventListener("click", e => {
+      e.preventDefault();
+
+      const seconds =
+        e.target.getAttribute("data-seek") ||
+        e.target.parentNode.getAttribute("data-seek");
+
+      if (!seconds) return;
+
+      Player.seekTo(seconds);
+    });
 
     vidChannel
       .join()
-      .receive("ok", ({ annotations }) =>
-        this.scheduleMessages(msgContainer, annotations)
-      )
+      .receive("ok", ({ annotations }) => {
+        const ids = annotations.map(annotation => annotation.id);
+        if (ids.length > 0) lastSeenId = Math.max(ids);
+
+        this.scheduleMessages(msgContainer, annotations);
+      })
       .receive("error", reason => console.log("join failed", reason));
   },
 
