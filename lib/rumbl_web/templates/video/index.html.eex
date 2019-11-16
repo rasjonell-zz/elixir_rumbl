@@ -10,20 +10,20 @@
     </tr>
   </thead>
   <tbody>
-<%= for video <- @videos do %>
-    <tr>
-      <td><%= video.title %></td>
-      <td>
-        <span><%= link "Edit", to: Routes.video_path(@conn, :edit, video) %></span>
-      </td>
-      <td>
-        <span><%= link "Delete", to: Routes.video_path(@conn, :delete, video), method: :delete, data: [confirm: "Are you sure?"] %></span>
-      </td>
-      <td>
-        <span><%= link "Watch", to: Routes.watch_path(@conn, :show, video), class: "button" %></span>
-      </td>
-    </tr>
-<% end %>
+    <%= for video <- @videos do %>
+      <tr>
+        <td><%= video.title %></td>
+        <td>
+          <span><%= link "Edit", to: Routes.video_path(@conn, :edit, video) %></span>
+        </td>
+        <td>
+          <span><%= link "Delete", to: Routes.video_path(@conn, :delete, video), method: :delete, data: [confirm: "Are you sure?"] %></span>
+        </td>
+        <td>
+          <span><%= link "Watch", to: Routes.watch_path(@conn, :show, video), class: "button" %></span>
+        </td>
+      </tr>
+    <% end %>
   </tbody>
 </table>
 
