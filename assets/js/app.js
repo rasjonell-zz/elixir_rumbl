@@ -1,11 +1,7 @@
 import css from "../css/app.css";
 import "phoenix_html";
 
-import Player from "./player";
+import Video from "./video";
+import socket from "./socket";
 
-const video = document.getElementById("video");
-
-if (video)
-  Player.init(video.id, video.getAttribute("data-player-id"), () =>
-    console.log("Player Ready")
-  );
+Video.init(socket, document.getElementById("video"));
