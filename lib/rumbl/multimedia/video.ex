@@ -10,6 +10,8 @@ defmodule Rumbl.Multimedia.Video do
     field :title, :string
     field :description, :string
 
+    has_many :annotations, Rumbl.Multimedia.Annotation
+
     belongs_to :user, Rumbl.Accounts.User
     belongs_to :category, Rumbl.Multimedia.Category
 

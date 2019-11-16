@@ -1,6 +1,8 @@
 import Player from "./player";
 
 export default {
+  scheduleTimer: null,
+
   init(socket, element) {
     if (!element) return;
 
@@ -33,8 +35,52 @@ export default {
 
     vidChannel
       .join()
-      .receive("ok", resp => console.log("joined the video channel", resp))
+      .receive("ok", ({ annotations }) =>
+        this.scheduleMessages(msgContainer, annotations)
+      )
       .receive("error", reason => console.log("join failed", reason));
+  },
+
+  scheduleMessages(msgContainer, annotations) {
+    clearTimeout(this.scheduleTimer);
+
+    this.scheduleTimer = setTimeout(() => {
+      const currentTime = Player.getCurrentTime();
+      const remaining = this.renderAtTime(
+        annotations,
+        currentTime,
+        msgContainer
+      );
+
+      this.scheduleMessages(msgContainer, remaining);
+    }, 1000);
+  },
+
+  renderAtTime(annotations, currentTime, msgContainer) {
+    return annotations.filter(annotation => {
+      if (annotation.at > currentTime) return true;
+
+      this.renderAnnotation(msgContainer, annotation);
+      return false;
+    });
+  },
+
+  renderAnnotation(msgContainer, { user, body, at }) {
+    const template = document.createElement("div");
+    const [escUsername, escBody, escAt] = [user.username, body, at].map(
+      this.escape
+    );
+    const formattedTime = this.formatTime(at);
+
+    template.innerHTML = `
+      <a href="#" data-seek="${escAt}">
+        [${formattedTime}]
+        <strong>${escUsername}</strong>: ${escBody}
+      </a>
+    `;
+
+    msgContainer.appendChild(template);
+    msgContainer.scrollTop = msgContainer.scrollHeight;
   },
 
   escape(str) {
@@ -43,20 +89,9 @@ export default {
     return div.innerHTML;
   },
 
-  renderAnnotation(msgContainer, { user, body, at }) {
-    const template = document.createElement("div");
-    const [escUsername, escBody, escAt] = [user.username, body, at].map(
-      this.escape
-    );
-
-    template.innerHTML = `
-      <a href="#" data-seek="${escAt}">
-        <strong>${escUsername}</strong>: ${escBody}
-      </a>
-    `;
-
-    msgContainer.appendChild(template);
-
-    msgContainer.scrollTop = msgContainer.scrollHeight;
+  formatTime(at) {
+    const date = new Date(null);
+    date.setSeconds(at / 1000);
+    return date.toISOString().substr(14, 5);
   }
 };
